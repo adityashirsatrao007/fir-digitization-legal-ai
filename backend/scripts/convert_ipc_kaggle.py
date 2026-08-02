@@ -5,9 +5,10 @@ into the ipc_full_data.json format expected by the legal-search backend.
 Run from backend/: python3 scripts/convert_ipc_kaggle.py
 """
 
-import re
 import json
 import os
+import re
+
 import pandas as pd
 
 CSV_PATH = os.path.expanduser(
@@ -127,9 +128,7 @@ def is_non_bailable(section_num: str, punishment: str) -> bool:
         return True
     # If imprisonment exceeds 3 years usually non-bailable
     match = re.search(r"(\d+)\s*years?", low)
-    if match and int(match.group(1)) > 3:
-        return True
-    return False
+    return bool(match and int(match.group(1)) > 3)
 
 
 def is_cognizable(section_num: str, punishment: str) -> bool:
@@ -139,9 +138,7 @@ def is_cognizable(section_num: str, punishment: str) -> bool:
     if re.search(r"(imprisonment for life|death|rigorous imprisonment)\b", low):
         return True
     match = re.search(r"(\d+)\s*years?", low)
-    if match and int(match.group(1)) >= 3:
-        return True
-    return False
+    return bool(match and int(match.group(1)) >= 3)
 
 
 # ── Keyword extraction ────────────────────────────────────────────────────────

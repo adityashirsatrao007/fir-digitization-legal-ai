@@ -1,28 +1,27 @@
-import os
-import sys
-import json
-import random
 import asyncio
-import uuid
-import urllib.parse
-import re
+import json
 import logging
-from typing import Any, Dict, Optional
+import os
+import random
+import re
+import urllib.parse
+import uuid
 from contextlib import asynccontextmanager
-from urllib.parse import urlparse
-
-from fastapi import FastAPI, UploadFile, File, Form, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from psycopg2.extras import RealDictCursor
+from typing import Any
 
 # Load env
 from dotenv import load_dotenv
+from fastapi import FastAPI, File, Form, Request, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from psycopg2.extras import RealDictCursor
+from pydantic import BaseModel
+
 load_dotenv()
 
-from app.routes.auth import router as auth_router, get_db_connection, release_db_connection
+from app.routes.auth import get_db_connection, release_db_connection
+from app.routes.auth import router as auth_router
 from app.routes.fir import router as fir_router
 from app.routes.legal_search import router as legal_search_router
 from app.services.evidence_forensics import analyze_uploaded_evidence
@@ -108,7 +107,7 @@ def health_check():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"success": False, "error": "Internal server error."},
@@ -142,7 +141,7 @@ def _save_uploaded_image(file_bytes: bytes, original_name: str, content_type: st
     return f"{BACKEND_URL}/static/{subdir}/{urllib.parse.quote(filename)}"
 
 @app.get("/cases")
-def get_cases(email: Optional[str] = None):
+def get_cases(email: str | None = None):
     try:
         demo_accounts = {"analyst@nyaya.ai", "demo@nyaya.ai", "officer@nyaya.ai"}
         conn = get_db_connection()
@@ -171,7 +170,7 @@ def get_cases(email: Optional[str] = None):
 
         if not cases and email in demo_accounts:
             try:
-                with open("cases.json", "r") as f:
+                with open("cases.json") as f:
                     cases = json.load(f).get("cases", [])
             except Exception:
                 pass
@@ -182,7 +181,7 @@ def get_cases(email: Optional[str] = None):
         return {"cases": []}
 
 @app.post("/cases")
-def create_case(new_case: Dict[str, Any], email: Optional[str] = "demo@nyaya.ai"):
+def create_case(new_case: dict[str, Any], email: str | None = "demo@nyaya.ai"):
     try:
         if "case_id" not in new_case:
             new_case["case_id"] = f"IND-FIR-2026-{random.randint(1000, 9999)}"
@@ -206,7 +205,7 @@ def create_case(new_case: Dict[str, Any], email: Optional[str] = "demo@nyaya.ai"
         return {"error": str(e)}
 
 @app.put("/cases/{case_id}")
-def update_case(case_id: str, updated_data: Dict[str, Any], email: Optional[str] = None):
+def update_case(case_id: str, updated_data: dict[str, Any], email: str | None = None):
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -236,7 +235,7 @@ def update_case(case_id: str, updated_data: Dict[str, Any], email: Optional[str]
         return {"error": str(e)}
 
 @app.delete("/cases/{case_id}")
-def delete_case(case_id: str, email: Optional[str] = None):
+def delete_case(case_id: str, email: str | None = None):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -266,11 +265,16 @@ async def analyze_evidence(file: UploadFile = File(...), context: str = Form("ev
         saved_fir_image_url = _save_uploaded_image(contents, file.filename or "fir_image", file_type, "firs")
         
         try:
-            from app.services.ocr_service import extract_text_from_image, clean_extracted_text, detect_language, translate_to_english
             from app.services.ipc_extractor import extract_ipc_sections
+            from app.services.ocr_service import (
+                clean_extracted_text,
+                detect_language,
+                extract_text_from_image,
+                translate_to_english,
+            )
             
             # Perform actual OCR processing via HF Inference API
-            raw_text, conf, method = await extract_text_from_image(contents, True)
+            raw_text, conf, _method = await extract_text_from_image(contents, True)
             cleaned_text = clean_extracted_text(raw_text)
             
             # Accurately detect language
@@ -352,7 +356,7 @@ async def analyze_evidence(file: UploadFile = File(...), context: str = Form("ev
             # If the OCR fails (e.g. they uploaded a PDF format instead of image)
             print(f"OCR Pipeline Exception: {e}")
             from fastapi import HTTPException
-            raise HTTPException(status_code=500, detail=f"Document Analysis Failed: Could not process the uploaded file securely ({str(e)}).")
+            raise HTTPException(status_code=500, detail=f"Document Analysis Failed: Could not process the uploaded file securely ({e!s}).")
 
         
     contents = await file.read()

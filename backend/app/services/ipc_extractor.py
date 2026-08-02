@@ -3,20 +3,19 @@ IPC Section Extractor
 Extracts Indian Penal Code section references from text using regex patterns
 and maps them to detailed section information
 """
-import re
 import json
 import logging
+import re
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
 # Load IPC sections database
-_ipc_database: Optional[Dict] = None
+_ipc_database: dict | None = None
 
 
 
-def load_ipc_database() -> Dict:
+def load_ipc_database() -> dict:
     """Load IPC sections from JSON file"""
     global _ipc_database
     
@@ -24,7 +23,7 @@ def load_ipc_database() -> Dict:
         db_path = Path(__file__).parent.parent.parent / "data" / "ipc_sections.json"
         
         try:
-            with open(db_path, 'r', encoding='utf-8') as f:
+            with open(db_path, encoding='utf-8') as f:
                 data = json.load(f)
                 _ipc_database = data.get("sections", {})
                 logger.info(f"Loaded {len(_ipc_database)} IPC sections from database")
@@ -38,7 +37,7 @@ def load_ipc_database() -> Dict:
     return _ipc_database
 
 
-def get_ipc_patterns() -> List[Tuple[str, re.Pattern]]:
+def get_ipc_patterns() -> list[tuple[str, re.Pattern]]:
     """
     Returns list of regex patterns to match IPC section references
     Each pattern captures the section number with possible subsections
@@ -103,7 +102,7 @@ def get_ipc_patterns() -> List[Tuple[str, re.Pattern]]:
     return patterns
 
 
-def extract_section_numbers(text: str) -> Tuple[List[str], List[str]]:
+def extract_section_numbers(text: str) -> tuple[list[str], list[str]]:
     """
     Extract IPC section numbers from text. Supports splitting by
     commas, slashes, pipes, underscores, and hyphens.
@@ -175,7 +174,7 @@ def extract_section_numbers(text: str) -> Tuple[List[str], List[str]]:
     return sorted(filtered_sections), raw_matches
 
 
-def get_section_info(section: str) -> Optional[Dict]:
+def get_section_info(section: str) -> dict | None:
     """
     Get detailed information about an IPC section
     
@@ -203,7 +202,7 @@ def get_section_info(section: str) -> Optional[Dict]:
     return None
 
 
-def extract_ipc_sections(text: str) -> List[Dict]:
+def extract_ipc_sections(text: str) -> list[dict]:
     """
     Extract all IPC sections from text with detailed information.
     Uses regex to extract explicitly mentioned section numbers, and
@@ -216,7 +215,7 @@ def extract_ipc_sections(text: str) -> List[Dict]:
     Returns:
         List of dictionaries containing section details
     """
-    sections, raw_matches = extract_section_numbers(text)
+    sections, _raw_matches = extract_section_numbers(text)
     
     results = []
     matched_sections_set = set()
@@ -249,7 +248,7 @@ def extract_ipc_sections(text: str) -> List[Dict]:
     return results
 
 
-def extract_fir_metadata(text: str) -> Dict:
+def extract_fir_metadata(text: str) -> dict:
     """
     Extract additional metadata from FIR text
     - Complainant name
@@ -327,7 +326,7 @@ def extract_fir_metadata(text: str) -> Dict:
     return metadata
 
 
-def generate_summary(text: str, ipc_sections: List[Dict]) -> str:
+def generate_summary(text: str, ipc_sections: list[dict]) -> str:
     """
     Generate a brief summary of the FIR based on extracted information
     """
@@ -340,7 +339,7 @@ def generate_summary(text: str, ipc_sections: List[Dict]) -> str:
         sections_str = f"IPC Sections identified: {', '.join(section_nums)}. "
         
         # Add categories
-        categories = set(s['category'] for s in ipc_sections if s.get('category') != 'Unknown')
+        categories = {s['category'] for s in ipc_sections if s.get('category') != 'Unknown'}
         if categories:
             sections_str += f"Categories: {', '.join(categories)}. "
     

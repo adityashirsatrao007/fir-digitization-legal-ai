@@ -2,15 +2,15 @@
 OCR Service for FIR Image Processing
 Uses Hugging Face Inference API exclusively (no local models).
 """
-import os
 import io
-import re
 import logging
-from typing import Tuple
-from PIL import Image, ImageEnhance
+import os
+import re
+
 import httpx
-from langdetect import detect
 from deep_translator import GoogleTranslator
+from langdetect import detect
+from PIL import Image, ImageEnhance
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def _image_to_bytes(image: Image.Image, fmt: str = "JPEG") -> bytes:
     return buf.getvalue()
 
 
-async def _extract_via_hf_api(image: Image.Image) -> Tuple[str, float]:
+async def _extract_via_hf_api(image: Image.Image) -> tuple[str, float]:
     """Extract text from image using Hugging Face Inference API."""
     if not HF_API_TOKEN:
         raise RuntimeError("HF_API_TOKEN/HF_TOKEN not configured for OCR inference.")
@@ -112,7 +112,7 @@ def _build_candidates(base_image: Image.Image, preprocess: bool) -> list[tuple[s
     return candidates
 
 
-async def extract_text_from_image(image_bytes: bytes, preprocess: bool = True) -> Tuple[str, float, str]:
+async def extract_text_from_image(image_bytes: bytes, preprocess: bool = True) -> tuple[str, float, str]:
     """
     Extract text from FIR image using HF Inference API.
     
