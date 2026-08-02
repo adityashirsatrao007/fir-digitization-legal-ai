@@ -6,10 +6,9 @@ Builds training data from:
 3. IPC section text as classification labels
 """
 import json
-import re
 import random
+import re
 from pathlib import Path
-from typing import List, Dict
 
 # ─── IPC section patterns commonly found in FIR text ───
 IPC_TEXT_PATTERNS = [
@@ -423,7 +422,7 @@ SECTION_VARIATIONS = {
 }
 
 
-def extract_sections_from_text(text: str) -> List[str]:
+def extract_sections_from_text(text: str) -> list[str]:
     """Extract IPC section numbers from text using all patterns"""
     sections = set()
     for pattern in IPC_TEXT_PATTERNS:
@@ -434,10 +433,10 @@ def extract_sections_from_text(text: str) -> List[str]:
                 part = part.strip().upper()
                 if re.match(r'^\d{1,3}[A-Z]?$', part):
                     sections.add(part)
-    return sorted(list(sections))
+    return sorted(sections)
 
 
-def build_from_fir_details(fir_details_path: str) -> List[Dict]:
+def build_from_fir_details(fir_details_path: str) -> list[dict]:
     """Build training samples from the FIR_details.json"""
     samples = []
     
@@ -478,7 +477,7 @@ def build_from_fir_details(fir_details_path: str) -> List[Dict]:
                     if re.match(r'^\d{1,3}[A-Z]?$', part):
                         all_sections.append(part)
             
-            all_sections = sorted(list(set(all_sections)))
+            all_sections = sorted(set(all_sections))
             
             if all_sections:
                 # Build context text from all non-IPC text from this FIR
@@ -502,7 +501,7 @@ def build_from_fir_details(fir_details_path: str) -> List[Dict]:
     return samples
 
 
-def build_synthetic_dataset() -> List[Dict]:
+def build_synthetic_dataset() -> list[dict]:
     """Build synthetic training samples"""
     samples = []
     
@@ -561,7 +560,7 @@ def build_complete_dataset(output_path: str):
         languages[lang] = languages.get(lang, 0) + 1
         all_ipc.extend(s.get('ipc_sections', []))
     
-    unique_sections = sorted(list(set(all_ipc)))
+    unique_sections = sorted(set(all_ipc))
     
     print("\n📊 Dataset Statistics:")
     print(f"  Total samples: {len(all_samples)}")

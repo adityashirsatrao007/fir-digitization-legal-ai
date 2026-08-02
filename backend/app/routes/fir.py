@@ -2,29 +2,29 @@
 FIR Processing API Routes
 Endpoints for uploading FIR images, extracting text, and identifying IPC sections
 """
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form
-from typing import Optional
 import logging
 from datetime import datetime
 
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
 from app.models.schemas import (
-    FIRExtraction, 
-    FIRAnalysis, 
-    IPCSection, 
-    ExtractIPCRequest, 
-    ExtractIPCResponse
-)
-from app.services.ocr_service import (
-    extract_text_from_image, 
-    clean_extracted_text, 
-    detect_language,
-    translate_to_english
+    ExtractIPCRequest,
+    ExtractIPCResponse,
+    FIRAnalysis,
+    FIRExtraction,
+    IPCSection,
 )
 from app.services.ipc_extractor import (
-    extract_ipc_sections, 
-    extract_section_numbers,
     extract_fir_metadata,
-    generate_summary
+    extract_ipc_sections,
+    extract_section_numbers,
+    generate_summary,
+)
+from app.services.ocr_service import (
+    clean_extracted_text,
+    detect_language,
+    extract_text_from_image,
+    translate_to_english,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ async def extract_fir_text(
         logger.error(f"Error extracting text from FIR: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error processing image: {str(e)}"
+            detail=f"Error processing image: {e!s}"
         )
 
 
@@ -157,7 +157,7 @@ async def extract_ipc_from_text(request: ExtractIPCRequest):
         logger.error(f"Error extracting IPC sections: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error extracting IPC sections: {str(e)}"
+            detail=f"Error extracting IPC sections: {e!s}"
         )
 
 
@@ -254,14 +254,14 @@ async def analyze_fir(
         logger.error(f"Error analyzing FIR: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error analyzing FIR: {str(e)}"
+            detail=f"Error analyzing FIR: {e!s}"
         )
 
 
 @router.get("/ipc/sections")
 async def list_ipc_sections(
-    category: Optional[str] = None,
-    search: Optional[str] = None
+    category: str | None = None,
+    search: str | None = None
 ):
     """
     List available IPC sections from database
@@ -304,7 +304,7 @@ async def list_ipc_sections(
         logger.error(f"Error listing IPC sections: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error listing IPC sections: {str(e)}"
+            detail=f"Error listing IPC sections: {e!s}"
         )
 
 
@@ -337,14 +337,14 @@ async def get_ipc_section(section_number: str):
         logger.error(f"Error getting IPC section: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error getting IPC section: {str(e)}"
+            detail=f"Error getting IPC section: {e!s}"
         )
 
 
 @router.get("/crime-statistics")
 async def get_crime_statistics(
-    state: Optional[str] = None,
-    category: Optional[str] = None
+    state: str | None = None,
+    category: str | None = None
 ):
     """
     Get crime statistics from NCRB data (2014-2016)
@@ -360,7 +360,7 @@ async def get_crime_statistics(
         
         stats_path = Path(__file__).parent.parent.parent / "data" / "crime_statistics.json"
         
-        with open(stats_path, 'r', encoding='utf-8') as f:
+        with open(stats_path, encoding='utf-8') as f:
             data = json.load(f)
         
         result = {
@@ -415,13 +415,13 @@ async def get_crime_statistics(
         logger.error(f"Error fetching crime statistics: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error fetching crime statistics: {str(e)}"
+            detail=f"Error fetching crime statistics: {e!s}"
         )
 
 
 @router.get("/sample-firs")
 async def get_sample_firs(
-    category: Optional[str] = None,
+    category: str | None = None,
     limit: int = 10
 ):
     """
@@ -438,7 +438,7 @@ async def get_sample_firs(
         
         firs_path = Path(__file__).parent.parent.parent / "data" / "sample_firs.json"
         
-        with open(firs_path, 'r', encoding='utf-8') as f:
+        with open(firs_path, encoding='utf-8') as f:
             data = json.load(f)
         
         firs = data["sample_firs"]
@@ -453,7 +453,7 @@ async def get_sample_firs(
         return {
             "total": len(firs),
             "sample_firs": firs,
-            "available_categories": list(set(f["category"] for f in data["sample_firs"]))
+            "available_categories": list({f["category"] for f in data["sample_firs"]})
         }
         
     except FileNotFoundError:
@@ -465,7 +465,7 @@ async def get_sample_firs(
         logger.error(f"Error fetching sample FIRs: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error fetching sample FIRs: {str(e)}"
+            detail=f"Error fetching sample FIRs: {e!s}"
         )
 
 
@@ -482,7 +482,7 @@ async def get_sample_fir(fir_id: str):
         
         firs_path = Path(__file__).parent.parent.parent / "data" / "sample_firs.json"
         
-        with open(firs_path, 'r', encoding='utf-8') as f:
+        with open(firs_path, encoding='utf-8') as f:
             data = json.load(f)
         
         for fir in data["sample_firs"]:
@@ -500,5 +500,5 @@ async def get_sample_fir(fir_id: str):
         logger.error(f"Error fetching sample FIR: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error fetching sample FIR: {str(e)}"
+            detail=f"Error fetching sample FIR: {e!s}"
         )

@@ -1,10 +1,11 @@
+import sys
 import time
 from pathlib import Path
-from PIL import Image
-import numpy as np
+
 import cv2
 import easyocr
-import sys
+import numpy as np
+from PIL import Image
 
 # Add backend directory to path
 sys.path.append(str(Path(__file__).parent))

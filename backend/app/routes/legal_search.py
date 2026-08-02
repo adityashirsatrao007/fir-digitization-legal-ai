@@ -1,8 +1,8 @@
 import json
-import os
 import math
+import os
 import re
-from typing import List, Optional
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -11,14 +11,14 @@ router = APIRouter()
 # ── Load IPC data ────────────────────────────────────────────────────────────
 _DATA_PATH = os.path.join(os.path.dirname(__file__), "../../data/ipc_full_data.json")
 
-with open(_DATA_PATH, "r", encoding="utf-8") as f:
-    IPC_SECTIONS: List[dict] = json.load(f)
+with open(_DATA_PATH, encoding="utf-8") as f:
+    IPC_SECTIONS: list[dict] = json.load(f)
 
 # ── TF-IDF Vector Engine ──────────────────────────────────────────────────────
 # Build a lightweight in-process TF-IDF index so the feature works immediately
 # without downloading external models.
 
-def _tokenize(text: str) -> List[str]:
+def _tokenize(text: str) -> list[str]:
     # Include numbers so section IDs like "302", "498a" are indexed
     return re.findall(r"[a-z0-9]+", text.lower())
 
@@ -37,14 +37,14 @@ def _build_doc_text(sec: dict) -> str:
 _documents = [_build_doc_text(s) for s in IPC_SECTIONS]
 _N = len(_documents)
 
-def _tf(tokens: List[str]) -> dict:
+def _tf(tokens: list[str]) -> dict:
     freq: dict = {}
     for t in tokens:
         freq[t] = freq.get(t, 0) + 1
     total = len(tokens) or 1
     return {t: c / total for t, c in freq.items()}
 
-def _df_counts(docs: List[List[str]]) -> dict:
+def _df_counts(docs: list[list[str]]) -> dict:
     df: dict = {}
     for doc in docs:
         for t in set(doc):
@@ -54,7 +54,7 @@ def _df_counts(docs: List[List[str]]) -> dict:
 _tokenized_docs = [_tokenize(d) for d in _documents]
 _df = _df_counts(_tokenized_docs)
 
-def _tfidf_vec(tokens: List[str]) -> dict:
+def _tfidf_vec(tokens: list[str]) -> dict:
     tf = _tf(tokens)
     vec: dict = {}
     for t, tf_val in tf.items():
@@ -79,8 +79,8 @@ _doc_vecs = [_tfidf_vec(toks) for toks in _tokenized_docs]
 
 class SearchRequest(BaseModel):
     query: str
-    limit: Optional[int] = 8
-    category: Optional[str] = None
+    limit: int | None = 8
+    category: str | None = None
 
 class ResourceLink(BaseModel):
     name: str
@@ -95,12 +95,12 @@ class SearchResult(BaseModel):
     bailable: bool
     cognizable: bool
     bhns_equivalent: str
-    keywords: List[str]
-    resources: List[ResourceLink]
+    keywords: list[str]
+    resources: list[ResourceLink]
     score: float
 
 class SearchResponse(BaseModel):
-    results: List[SearchResult]
+    results: list[SearchResult]
     total: int
     query: str
 
@@ -175,7 +175,7 @@ def semantic_search(req: SearchRequest):
 
 @router.get("/categories")
 def get_categories():
-    cats = sorted(set(s["category"] for s in IPC_SECTIONS))
+    cats = sorted({s["category"] for s in IPC_SECTIONS})
     return {"categories": cats}
 
 

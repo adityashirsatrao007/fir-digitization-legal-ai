@@ -1,19 +1,20 @@
 import os
+
 # Force HF Offline Mode
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["HF_OCR_ENABLE_TROCR"] = "false"
 
-import sys
 import json
+import sys
 import time
 from pathlib import Path
 
 # Add backend directory to path
 sys.path.append(str(Path(__file__).parent))
 
-from app.services.ocr_service import extract_text_from_image, clean_extracted_text
 from app.services.ipc_extractor import extract_ipc_sections
+from app.services.ocr_service import clean_extracted_text, extract_text_from_image
 
 demo_dir = Path("../demo_firs")
 output_json = demo_dir / "analysis_results.json"
@@ -78,7 +79,7 @@ for idx, img_path in enumerate(image_files, 1):
         results[img_path.name] = {
             "error": str(e)
         }
-        md_content += f"| `{img_path.name}` | *N/A* | *N/A* | ❌ Failed ({str(e)}) |\n"
+        md_content += f"| `{img_path.name}` | *N/A* | *N/A* | ❌ Failed ({e!s}) |\n"
 
 # Add detailed breakdown section to MD
 md_content += "\n## Detailed Mappings per FIR\n\n"

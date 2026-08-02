@@ -1,13 +1,14 @@
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from dotenv import load_dotenv
-from psycopg2.pool import SimpleConnectionPool
-from psycopg2.extras import RealDictCursor
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
-from jose import JWTError, jwt
+
 import bcrypt
+from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException, Request
+from jose import JWTError, jwt
+from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
+from pydantic import BaseModel
 
 load_dotenv()
 router = APIRouter()
@@ -125,7 +126,7 @@ def register(user: UserSignup):
     except Exception as e:
         conn.rollback()
         if isinstance(e, HTTPException):
-            raise e
+            raise
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         release_db_connection(conn)
@@ -165,7 +166,7 @@ def login(user: UserSignin):
         }
     except Exception as e:
         if isinstance(e, HTTPException):
-            raise e
+            raise
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         release_db_connection(conn)

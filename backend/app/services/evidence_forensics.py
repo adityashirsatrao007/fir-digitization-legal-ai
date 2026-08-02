@@ -1,13 +1,14 @@
-import os
 import io
 import logging
-from typing import Dict, Any
-from PIL import Image
 import mimetypes
+import os
+from typing import Any
+
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-def analyze_uploaded_evidence(contents: bytes, filename: str, file_type: str) -> Dict[str, Any]:
+def analyze_uploaded_evidence(contents: bytes, filename: str, file_type: str) -> dict[str, Any]:
     """
     Analyze uploaded evidence file for manipulation/authenticity.
     Attempts to use configured APIs (Hugging Face, Roboflow) when available,
@@ -63,14 +64,14 @@ def analyze_uploaded_evidence(contents: bytes, filename: str, file_type: str) ->
         return result
         
     except Exception as e:
-        logger.error(f"Evidence analysis failed: {str(e)}")
+        logger.error(f"Evidence analysis failed: {e!s}")
         # Return a safe fallback result
         return {
             "status": "success",
             "evidence_type": "Analysis Error",
             "confidence_score": 50.0,
             "is_manipulated": False,
-            "explanation": f"Analysis encountered an issue: {str(e)}. Please verify the file format and try again.",
+            "explanation": f"Analysis encountered an issue: {e!s}. Please verify the file format and try again.",
             "key_factors": ["Analysis incomplete due to technical issue"],
             "detected_ipcs": [],
             "ncrb_context": None
@@ -198,7 +199,7 @@ def _analyze_for_manipulation(contents: bytes, filename: str, file_type: str, ev
                         key_factors.append("Standard image properties consistent with authentic file")
                         
                 except Exception as img_e:
-                    logger.warning(f"Could not analyze image properties: {str(img_e)}")
+                    logger.warning(f"Could not analyze image properties: {img_e!s}")
                     key_factors.append("Image format analysis incomplete")
                     is_manipulated = True
                     confidence = 80.0
@@ -207,8 +208,8 @@ def _analyze_for_manipulation(contents: bytes, filename: str, file_type: str, ev
                 key_factors.append("Hugging Face model configuration loaded but label mapping unexpected")
                 
         except Exception as hf_e:
-            logger.warning(f"Could not load Hugging Face model: {str(hf_e)}")
-            key_factors.append(f"Hugging Face model loading failed: {str(hf_e)}")
+            logger.warning(f"Could not load Hugging Face model: {hf_e!s}")
+            key_factors.append(f"Hugging Face model loading failed: {hf_e!s}")
             # Fall back to heuristic analysis
     elif file_type.startswith('image/') and len(contents) > 100:
         # Image file but no HF token or config not available
@@ -239,7 +240,7 @@ def _analyze_for_manipulation(contents: bytes, filename: str, file_type: str, ev
                 key_factors.append("Standard image properties consistent with authentic file")
                 
         except Exception as e:
-            logger.warning(f"Could not analyze image properties: {str(e)}")
+            logger.warning(f"Could not analyze image properties: {e!s}")
             key_factors.append("Image format analysis incomplete")
             is_manipulated = True
             confidence = 80.0
