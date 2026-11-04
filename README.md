@@ -42,7 +42,7 @@ nyaya-ai-fir-system/
 │   └── src/
 │       ├── pages/              # Dashboard, Login, Search, CaseDetail
 │       └── components/         # Reusable UI components
-├── datasets/                   # Training data (FIR images + YOLO labels)
+├── datasets/                   # Training data layout (images not committed)
 ├── demo_firs/                  # Sample FIR documents
 └── docs/                       # Supplemental documentation
 ```
